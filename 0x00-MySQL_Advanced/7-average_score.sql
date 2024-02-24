@@ -2,18 +2,29 @@
 DELIMITER //
 
 CREATE PROCEDURE ComputeAverageScoreForUser (
-    IN student_id INT
+    IN user_id INT
 )
 BEGIN
-    DECLARE avg_score DECIMAL(5,2);
+    DECLARE total_score DECIMAL(10,2);
+    DECLARE total_count INT;
 
-    SELECT AVG(score) INTO avg_score
+    -- Compute total score and count of corrections
+    SELECT SUM(score), COUNT(*) INTO total_score, total_count
     FROM corrections
-    WHERE student_id = student_id;
+    WHERE user_id = user_id;
 
-    UPDATE students
-    SET average_score = avg_score
-    WHERE id = student_id;
+    -- Calculate average score
+    IF total_count > 0 THEN
+        UPDATE users
+        SET average_score = total_score / total_count
+        WHERE id = user_id;
+    ELSE
+        -- Set average score to 0 if no corrections found
+        UPDATE users
+        SET average_score = 0
+        WHERE id = user_id;
+    END IF;
+
 END//
 
 DELIMITER ;

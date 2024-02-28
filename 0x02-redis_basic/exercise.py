@@ -9,6 +9,39 @@ import uuid
 from typing import Union
 
 
+def count_calls(method: Callable) -> Callable:
+    """
+    Decorator to count how many times a method is called.
+    
+    Args:
+        method (Callable): The method to be decorated.
+        
+    Returns:
+        Callable: The decorated method.
+    """
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        """
+        Wrapper function to increment call count and call the original method.
+        
+        Args:
+            self: The instance of the class.
+            *args: Positional arguments passed to the method.
+            **kwargs: Keyword arguments passed to the method.
+            
+        Returns:
+            Any: The result of the original method call.
+        """
+        # Get the qualified name of the method
+        key = method.__qualname__
+        # Increment the count for the method
+        self._redis.incr(key)
+        # Call the original method and return its result
+        return method(self, *args, **kwargs)
+    
+    return wrapper
+
+
 class Cache:
     """
     A class for caching data using Redis.
@@ -21,6 +54,7 @@ class Cache:
         self._redis = redis.Redis()
         self._redis.flushdb()
 
+    @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """
         Stores data in Redis with a randomly generated key and returns the key.
@@ -89,12 +123,7 @@ class Cache:
 if __name__ == "__main__":
     cache = Cache()
 
-    TEST_CASES = {
-        b"foo": None,
-        123: int,
-        "bar": lambda d: d.decode("utf-8")
-    }
-
-    for value, fn in TEST_CASES.items():
-        key = cache.store(value)
-        assert cache.get(key, fn=fn) == value
+   # Test the decorated method
+    for i in range(5):
+        key = cache.store("Data")
+        print(f"Stored data with key: {key}")

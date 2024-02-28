@@ -6,7 +6,51 @@ This module defines a Cache class that interacts with Redis.
 
 import redis
 import uuid
+import functools
 from typing import Union
+
+
+def call_history(method: Callable) -> Callable:
+    """
+    Decorator to store the history of inputs and outputs for a
+    function in Redis lists.
+
+    Args:
+        method (Callable): The method to be decorated.
+
+    Returns:
+        Callable: The decorated method.
+    """
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        """
+        Wrapper function to store input and output history in Redis lists.
+
+        Args:
+            self: The instance of the class.
+            *args: Positional arguments passed to the method.
+            **kwargs: Keyword arguments passed to the method.
+
+        Returns:
+            Any: The result of the original method call.
+        """
+        # Get the qualified name of the method
+        key = method.__qualname__
+
+        # Store input arguments
+        input_key = key + ":inputs"
+        self._redis.rpush(input_key, str(args))
+
+        # Execute the original method to retrieve the output
+        output = method(self, *args, **kwargs)
+
+        # Store output
+        output_key = key + ":outputs"
+        self._redis.rpush(output_key, str(output))
+
+        return output
+
+    return wrapper
 
 
 def count_calls(method: Callable) -> Callable:

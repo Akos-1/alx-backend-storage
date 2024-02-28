@@ -42,10 +42,12 @@ def get_page(url: str) -> str:
 
 # Test the function
 if __name__ == "__main__":
-    url = "http://slowwly.robertomurray.co.uk/delay/1000/url/http://www.example.com"
+    base_url = "http://slowwly.robertomurray.co.uk/delay/1000/url/"
+    example_url = "http://www.example.com"
+    full_url = base_url + example_url
     start_time = time.time()
     for _ in range(5):
-        content = get_page(url)
+        content = get_page(full_url)
         print(f"HTML Content Length: {len(content)}")
     end_time = time.time()
     print(f"Total time taken: {end_time - start_time} seconds")

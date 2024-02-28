@@ -7,7 +7,7 @@ This module defines a Cache class that interacts with Redis.
 import redis
 import uuid
 import functools
-from typing import Union
+from typing import Callable, Union
 
 
 def call_history(method: Callable) -> Callable:
@@ -114,6 +114,34 @@ class Cache:
         self._redis.set(key, data)
         return key
 
+    def replay(self, method: Callable):
+        """
+        Display the history of calls of a particular function.
+
+        Args:
+            method (Callable): The method for which the history
+            of calls is to be displayed.
+        """
+        # Get the qualified name of the method
+        key = method.__qualname__
+
+        # Retrieve input and output keys from Redis
+        input_key = key + ":inputs"
+        output_key = key + ":outputs"
+
+        # Get the number of calls made to the method
+        num_calls = self._redis.llen(input_key)
+
+        print(f"{key} was called {num_calls} times:")
+
+        # Retrieve inputs and outputs from Redis
+        inputs = self._redis.lrange(input_key, 0, -1)
+        outputs = self._redis.lrange(output_key, 0, -1)
+
+        # Display each call along with its input and output
+        for args, output in zip(inputs, outputs):
+            print(f"{key}(*{args.decode('utf-8')}) -> {output.decode('utf-8')}")
+
     def get(self, key: str, fn: Callable = None) -> Union[str, bytes, int, float, None]:
         """
         Retrieves data from Redis using the given key and
@@ -171,3 +199,6 @@ if __name__ == "__main__":
     for i in range(5):
         key = cache.store("Data")
         print(f"Stored data with key: {key}")
+
+    # Display history of calls for the store method
+    cache.replay(cache.store)

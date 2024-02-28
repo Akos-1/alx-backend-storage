@@ -12,10 +12,10 @@ from typing import Union
 def count_calls(method: Callable) -> Callable:
     """
     Decorator to count how many times a method is called.
-    
+
     Args:
         method (Callable): The method to be decorated.
-        
+
     Returns:
         Callable: The decorated method.
     """
@@ -23,12 +23,12 @@ def count_calls(method: Callable) -> Callable:
     def wrapper(self, *args, **kwargs):
         """
         Wrapper function to increment call count and call the original method.
-        
+
         Args:
             self: The instance of the class.
             *args: Positional arguments passed to the method.
             **kwargs: Keyword arguments passed to the method.
-            
+
         Returns:
             Any: The result of the original method call.
         """
@@ -38,7 +38,7 @@ def count_calls(method: Callable) -> Callable:
         self._redis.incr(key)
         # Call the original method and return its result
         return method(self, *args, **kwargs)
-    
+
     return wrapper
 
 
@@ -123,7 +123,7 @@ class Cache:
 if __name__ == "__main__":
     cache = Cache()
 
-   # Test the decorated method
+    # Test the decorated method
     for i in range(5):
         key = cache.store("Data")
         print(f"Stored data with key: {key}")
